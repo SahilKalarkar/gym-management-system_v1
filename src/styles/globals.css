@@ -1,0 +1,149 @@
+@import "tailwindcss";
+
+/* ===== CUSTOM ANTD TABLE - DARK GLASSMORPHISM ===== */
+.custom-table-container {
+  /* Container */
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+/* Table Wrapper */
+.custom-table-container .ant-table-wrapper {
+  background: transparent;
+}
+
+/* Table */
+.custom-table-container .ant-table {
+  background: transparent;
+  color: #e5e7eb;
+}
+
+/* Header Row */
+.custom-table-container .ant-table-thead>tr>th {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(51, 65, 85, 0.9) 100%) !important;
+  border: none !important;
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 16px 20px !important;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1) !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+}
+
+/* Header Cell Hover */
+.custom-table-container .ant-table-thead>tr:hover>th {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%) !important;
+}
+
+/* Table Body Rows */
+.custom-table-container .ant-table-tbody>tr {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Row Hover */
+.custom-table-container .ant-table-tbody>tr:hover>td {
+  background: rgba(59, 130, 246, 0.1) !important;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+/* Row Selected */
+.custom-table-container .ant-table-tbody>tr.ant-table-row-selected>td {
+  background: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Table Cells */
+.custom-table-container .ant-table-tbody>tr>td {
+  background: rgba(17, 24, 39, 0.6) !important;
+  border: none !important;
+  padding: 16px 20px !important;
+  color: #e5e7eb !important;
+  font-weight: 500;
+  transition: all 0.3s ease !important;
+}
+
+/* Even Rows */
+.custom-table-container .ant-table-tbody>tr:nth-child(even)>td {
+  background: rgba(15, 23, 42, 0.6) !important;
+}
+
+/* Table Pagination */
+.custom-table-container .ant-pagination {
+  background: rgba(17, 24, 39, 0.8) !important;
+  border-radius: 12px !important;
+  padding: 12px 20px !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.custom-table-container .ant-pagination-item {
+  border-radius: 8px !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #e5e7eb !important;
+  transition: all 0.3s ease !important;
+}
+
+.custom-table-container .ant-pagination-item:hover {
+  background: rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+.custom-table-container .ant-pagination-item-active {
+  background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+  border: none !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Loading Overlay */
+.custom-table-container .ant-table-loading .ant-spin-container {
+  background: rgba(17, 24, 39, 0.95) !important;
+}
+
+/* Scrollbar */
+.custom-table-container .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.5) transparent;
+}
+
+.custom-table-container .ant-table-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-table-container .ant-table-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.custom-table-container .ant-table-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.custom-table-container .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .custom-table-container .ant-table-thead>tr>th {
+    padding: 12px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .custom-table-container .ant-table-tbody>tr>td {
+    padding: 12px 12px !important;
+  }
+}
