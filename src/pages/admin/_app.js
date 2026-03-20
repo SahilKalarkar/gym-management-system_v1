@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 import HeaderComponent from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { Layout, message } from 'antd';
