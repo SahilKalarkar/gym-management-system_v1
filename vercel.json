@@ -1,31 +1,5 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        },
-        {
-            "src": "public/gym_backend/api/**/*.php",
-            "use": "@vercel/php"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/gym_backend/api/(.*)",
-            "dest": "/public/gym_backend/api/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/$1"
-        }
-    ],
-    "functions": {
-        "public/gym_backend/api/*.php": {
-            "runtime": "vercel-php@0.6.0"
-        }
-    }
+  "rewrites": [
+    { "source": "/gym_backend/api/:path*", "destination": "/gym_backend/api/:path*" }
+  ]
 }
