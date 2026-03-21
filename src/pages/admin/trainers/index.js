@@ -185,13 +185,18 @@ export default function TrainersPage() {
                 ? `${TRAINERS}?action=create`
                 : `${TRAINERS}?action=update`;
 
+            // 🔥 FormData (NO CORS preflight!)
+            const formData = new FormData();
+            Object.keys(values).forEach(key => {
+                formData.append(key, values[key]);
+            });
+            if (editingTrainer?.id) {
+                formData.append('id', editingTrainer.id);
+            }
+
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...values,
-                    id: editingTrainer?.id
-                })
+                body: formData  // NO JSON headers!
             });
 
             const data = await res.json();
@@ -208,9 +213,19 @@ export default function TrainersPage() {
         }
     };
 
+
     const deleteTrainer = async (id) => {
         try {
-            const res = await fetch(`${TRAINERS}?action=delete&id=${id}`);
+            // 🔥 FormData DELETE (safer than GET delete)
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('action', 'delete');
+
+            const res = await fetch(TRAINERS, {
+                method: 'POST',
+                body: formData
+            });
+
             const data = await res.json();
             if (data.success) {
                 message.success('Trainer deleted successfully');
@@ -220,6 +235,7 @@ export default function TrainersPage() {
             message.error('Failed to delete trainer');
         }
     };
+
 
     return (
         <div className="space-y-6">
@@ -309,19 +325,19 @@ export default function TrainersPage() {
             </Row>
 
             {/* Trainers Table */}
-                <Table
-                    columns={trainersColumns}
-                    dataSource={filteredTrainers}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{
-                        pageSize: 10,
-                    }}
-                    rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
-                    // scroll={{ x: 1200 }}
-                    size="middle"
-                />
-          
+            <Table
+                columns={trainersColumns}
+                dataSource={filteredTrainers}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                    pageSize: 10,
+                }}
+                rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
+                // scroll={{ x: 1200 }}
+                size="middle"
+            />
+
             {/* Add/Edit Trainer Modal */}
             <Modal
                 title={formType === 'add' ? 'Add New Trainer' : 'Edit Trainer'}

@@ -245,35 +245,28 @@ export default function PaymentsPage() {
         setIsModalVisible(true);
     };
 
-
-
-
     const handleFormSubmit = async (values) => {
         setLoading(true);
         try {
-            // 🔥 Get member_id from dropdown selection
-            const selectedMemberId = values.member_id; // From handleMemberSelect
-
-            const payload = {
-                payment_id: values.payment_id,
-                member_id: values.member_id,        // ✅ From dropdown
-                member_name: values.member_name,    // ✅ Auto-set by handleMemberSelect
-                amount: parseFloat(values.amount),
-                membership_type: values.membership_type,
-                method: values.method,
-                status: values.status,
-                payment_date: dayjs(values.payment_date).format('YYYY-MM-DD'),
-                due_date: dayjs(values.due_date).format('YYYY-MM-DD')
-            };
-
             const url = formType === 'add'
                 ? `${PAYMENTS}?action=add`
                 : `${PAYMENTS}?action=update&id=${editingPayment.id}`;
 
+            // 🔥 FormData (NO JSON headers = NO CORS!)
+            const formData = new FormData();
+            formData.append('payment_id', values.payment_id);
+            formData.append('member_id', values.member_id);
+            formData.append('member_name', values.member_name);
+            formData.append('amount', parseFloat(values.amount));
+            formData.append('membership_type', values.membership_type);
+            formData.append('method', values.method);
+            formData.append('status', values.status);
+            formData.append('payment_date', dayjs(values.payment_date).format('YYYY-MM-DD'));
+            formData.append('due_date', dayjs(values.due_date).format('YYYY-MM-DD'));
+
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData  // 🔥 NO headers = SIMPLE request!
             });
 
             const data = await res.json();
@@ -291,11 +284,18 @@ export default function PaymentsPage() {
     };
 
 
+
     const deletePayment = async (id) => {
         try {
-            const res = await fetch(`${PAYMENTS}?action=delete&id=${id}`, {
-                method: 'POST'
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+
+            const res = await fetch(`${PAYMENTS}`, {
+                method: 'POST',
+                body: formData
             });
+
             const data = await res.json();
             if (data.success) {
                 message.success('Payment deleted successfully');
@@ -305,6 +305,7 @@ export default function PaymentsPage() {
             message.error('Failed to delete payment');
         }
     };
+
 
     return (
         <div className="space-y-6">
@@ -329,7 +330,11 @@ export default function PaymentsPage() {
                                 setEditingPayment(null);
                                 form.resetFields();
                                 const newPaymentId = generatePaymentId();
-                                form.setFieldsValue({ payment_id: newPaymentId });
+                                form.setFieldsValue({
+                                    payment_id: newPaymentId,
+                                    payment_date: dayjs(),  // 🔥 Today
+                                    due_date: dayjs().add(30, 'day')  // 🔥 +30 days
+                                });
                                 setNextPaymentId(newPaymentId);
                                 setIsModalVisible(true);
                             }}
@@ -406,19 +411,19 @@ export default function PaymentsPage() {
             </Row>
 
             {/* Payments Table */}
-                <Table
-                    columns={paymentsColumns}
-                    dataSource={filteredPayments}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{
-                        pageSize: 10,
-                    }}
-                    rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
-                    // scroll={{ x: 1200 }}
-                    size="middle"
-                />
-         
+            <Table
+                columns={paymentsColumns}
+                dataSource={filteredPayments}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                    pageSize: 10,
+                }}
+                rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
+                // scroll={{ x: 1200 }}
+                size="middle"
+            />
+
             {/* Add/Edit Payment Modal */}
             <Modal
                 title={formType === 'add' ? 'Add New Payment' : 'Edit Payment'}

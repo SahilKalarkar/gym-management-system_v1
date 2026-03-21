@@ -199,20 +199,29 @@ export default function ClassesPage() {
     const handleFormSubmit = async (values) => {
         setLoading(true);
         try {
-            const payload = {
-                ...values,
-                start_time: dayjs(values.start_time).format('HH:mm'),
-                end_time: dayjs(values.end_time).format('HH:mm')
-            };
-
             const url = formType === 'add'
                 ? `${CLASSES}?action=add`
                 : `${CLASSES}?action=update&id=${editingClass.id}`;
 
+            // 🔥 FormData + TimePicker format (NO CORS!)
+            const formData = new FormData();
+            formData.append('title', values.title);
+            formData.append('trainer_id', values.trainer_id);
+            formData.append('trainer_name', values.trainer_name);
+            formData.append('type', values.type);
+            formData.append('day', values.day);
+            formData.append('location', values.location);
+            formData.append('capacity', values.capacity);
+            formData.append('current_enrolled', values.current_enrolled || 0);
+            formData.append('status', values.status);
+
+            // 🔥 TimePicker dayjs format
+            formData.append('start_time', dayjs(values.start_time).format('HH:mm'));
+            formData.append('end_time', dayjs(values.end_time).format('HH:mm'));
+
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData  // NO JSON headers = SIMPLE request!
             });
 
             const data = await res.json();
@@ -229,11 +238,19 @@ export default function ClassesPage() {
         }
     };
 
+
     const deleteClass = async (id) => {
         try {
-            const res = await fetch(`${CLASSES}?action=delete&id=${id}`, {
-                method: 'POST'
+            // 🔥 FormData POST delete (same pattern!)
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+
+            const res = await fetch(`${CLASSES}`, {
+                method: 'POST',
+                body: formData
             });
+
             const data = await res.json();
             if (data.success) {
                 message.success('Class deleted successfully');
@@ -243,6 +260,7 @@ export default function ClassesPage() {
             message.error('Failed to delete class');
         }
     };
+
 
 
     return (
@@ -315,19 +333,19 @@ export default function ClassesPage() {
             </Row>
 
             {/* Classes Table */}
-                <Table
-                    columns={classesColumns}
-                    dataSource={filteredClasses}
-                    rowKey="id"
-                    loading={loading}
-                    pagination={{
-                        pageSize: 10,
-                    }}
-                    rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
-                    // scroll={{ x: 1200 }}
-                    size="middle"
-                />
-          
+            <Table
+                columns={classesColumns}
+                dataSource={filteredClasses}
+                rowKey="id"
+                loading={loading}
+                pagination={{
+                    pageSize: 10,
+                }}
+                rowClassName="hover:bg-white/10 transition-colors cursor-pointer"
+                // scroll={{ x: 1200 }}
+                size="middle"
+            />
+
             {/* Add/Edit Class Modal */}
             <Modal
                 title={formType === 'add' ? 'Add New Class' : 'Edit Class'}

@@ -191,13 +191,21 @@ export default function MembersPage() {
         setLoading(true);
         try {
             const url = formType === 'add'
-                ? 'http://localhost/gym_backend/api/members.php?action=add'
-                : `http://localhost/gym_backend/api/members.php?action=update&id=${editingMember.id}`;
+                ? `${MEMBERS}?action=add`
+                : `${MEMBERS}?action=update&id=${editingMember.id}`;
+
+            // 🔥 FormData (NO CORS!)
+            const formData = new FormData();
+            formData.append('name', values.name);
+            formData.append('email', values.email);
+            formData.append('phone', values.phone);
+            formData.append('membership_type', values.membership_type);
+            formData.append('status', values.status);
+            formData.append('join_date', values.join_date.format('YYYY-MM-DD'));
 
             const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values)
+                body: formData  // NO JSON headers!
             });
 
             const data = await res.json();
@@ -214,11 +222,19 @@ export default function MembersPage() {
         }
     };
 
+
     const deleteMember = async (id) => {
         try {
-            const res = await fetch(`http://localhost/gym_backend/api/members.php?action=delete&id=${id}`, {
-                method: 'POST'
+            // 🔥 FormData POST delete (same as trainers!)
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
+
+            const res = await fetch(`${MEMBERS}`, {
+                method: 'POST',
+                body: formData
             });
+
             const data = await res.json();
             if (data.success) {
                 message.success('Member deleted successfully');
@@ -228,6 +244,7 @@ export default function MembersPage() {
             message.error('Failed to delete member');
         }
     };
+
 
 
     return (

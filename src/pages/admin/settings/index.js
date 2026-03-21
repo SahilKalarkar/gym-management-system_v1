@@ -33,20 +33,25 @@ export default function SettingsPanel() {
     const handleSave = async (values) => {
         setLoading(true);
         try {
-            const payload = {
-                ...values,
-                // 🔥 SEND PURE BOOLEAN - PHP handles conversion
-                site_status: !!values.site_status,  // true/false
-                maintenance_start: values.maintenance_period?.[0]?.format('YYYY-MM-DD HH:mm') || null,
-                maintenance_end: values.maintenance_period?.[1]?.format('YYYY-MM-DD HH:mm') || null
-            };
+            // 🔥 FormData (NO JSON headers = NO CORS!)
+            const formData = new FormData();
 
-            console.log('🔥 PAYLOAD:', payload.site_status); // true/false
+            // 🔥 Switches (true/false → FormData)
+            formData.append('site_status', values.site_status || false);
+            formData.append('email_notifications', values.email_notifications || false);
+            formData.append('sms_notifications', values.sms_notifications || false);
+            formData.append('backup_enabled', values.backup_enabled || false);
+
+            // 🔥 Text fields
+            formData.append('maintenance_message', values.maintenance_message || 'Site is under maintenance');
+
+            // 🔥 RangePicker → Two separate dates
+            formData.append('maintenance_start', values.maintenance_period?.[0]?.format('YYYY-MM-DD HH:mm') || '');
+            formData.append('maintenance_end', values.maintenance_period?.[1]?.format('YYYY-MM-DD HH:mm') || '');
 
             const res = await fetch(`${SETTINGS}?action=update`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData  // 🔥 NO headers = SIMPLE request!
             });
 
             const data = await res.json();
@@ -60,6 +65,7 @@ export default function SettingsPanel() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="space-y-6">

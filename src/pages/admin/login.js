@@ -15,10 +15,13 @@ export default function AdminLogin() {
     const onFinish = async (values) => {
         setLoading(true);
         try {
+            const formData = new FormData();
+            formData.append('username', values.username);
+            formData.append('password', values.password);
+
             const res = await fetch(LOGIN, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(values)
+                body: formData  // NO Content-Type header = SIMPLE request!
             });
 
             const data = await res.json();
@@ -42,9 +45,10 @@ export default function AdminLogin() {
         } catch (error) {
             message.error('Network error. Please try again.');
         } finally {
-            setLoading(false);
+            setLoading(true);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-linear-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center relative overflow-hidden">
