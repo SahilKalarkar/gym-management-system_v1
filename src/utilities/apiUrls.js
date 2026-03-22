@@ -11,6 +11,7 @@ export const GLOBAL_PATH = 'https://gym-backend-node-v1-2.onrender.com/gym_backe
 
 export const LOGIN = `${GLOBAL_PATH}/auth.php`
 
+export const EQUIPMENTS = `${GLOBAL_PATH}/equipments.php`;
 export const MEMBERS = `${GLOBAL_PATH}/members.php`
 export const CLASSES = `${GLOBAL_PATH}/classes.php`
 export const PAYMENTS = `${GLOBAL_PATH}/payments.php`

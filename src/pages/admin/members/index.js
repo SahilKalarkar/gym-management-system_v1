@@ -9,7 +9,8 @@ import {
     UserOutlined, PhoneOutlined, MailOutlined, CalendarOutlined,
     FireOutlined,
     DollarCircleOutlined,
-    ClockCircleOutlined
+    ClockCircleOutlined,
+    EyeOutlined
 } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
@@ -27,7 +28,9 @@ export default function MembersPage() {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingMember, setEditingMember] = useState(null);
     const [form] = Form.useForm();
-    const [formType, setFormType] = useState('add'); // 'add' or 'edit'
+    const [formType, setFormType] = useState('add');
+
+    const [viewMode, setViewMode] = useState(false);
 
     useEffect(() => {
         fetchMembers();
@@ -103,10 +106,10 @@ export default function MembersPage() {
                     {memberId}
                 </Tag>
             ),
-            width: 120
+            width: 200
         },
         {
-            title: 'Member Info',
+            title: 'Member Name',
             key: 'info',
             render: (_, record) => (
                 <Space>
@@ -115,7 +118,7 @@ export default function MembersPage() {
                     </div>
                     <div>
                         <div className="font-semibold ">{record.name}</div>
-                        <div className="text-sm">{record.phone}</div>
+                        {/* <div className="text-sm">{record.phone}</div> */}
                     </div>
                 </Space>
             ),
@@ -156,6 +159,13 @@ export default function MembersPage() {
             render: (_, record) => (
                 <Space size="middle">
                     <Button
+                        icon={<EyeOutlined />}
+                        onClick={() => viewMember(record)}
+                        size="small"
+                        className="text-blue-400! border-blue-400!"
+                        title="View Details"
+                    />
+                    <Button
                         icon={<EditOutlined />}
                         onClick={() => editMember(record)}
                         size="small"
@@ -176,6 +186,7 @@ export default function MembersPage() {
     const editMember = (member) => {
         setEditingMember(member);
         setFormType('edit');
+        setViewMode(false);
         form.setFieldsValue({
             name: member.name,
             email: member.email,
@@ -187,6 +198,22 @@ export default function MembersPage() {
         setIsModalVisible(true);
     };
 
+    const viewMember = (member) => {
+        setEditingMember(member);
+        setFormType('view');
+        setViewMode(true);
+        form.setFieldsValue({
+            name: member.name,
+            email: member.email,
+            phone: member.phone,
+            membership_type: member.membership_type,
+            status: member.status,
+            join_date: dayjs(member.join_date)
+        });
+        setIsModalVisible(true);
+    };
+
+
     const handleFormSubmit = async (values) => {
         setLoading(true);
         try {
@@ -194,7 +221,6 @@ export default function MembersPage() {
                 ? `${MEMBERS}?action=add`
                 : `${MEMBERS}?action=update&id=${editingMember.id}`;
 
-            // 🔥 FormData (NO CORS!)
             const formData = new FormData();
             formData.append('name', values.name);
             formData.append('email', values.email);
@@ -263,6 +289,7 @@ export default function MembersPage() {
                             onClick={() => {
                                 setFormType('add');
                                 setEditingMember(null);
+                                setViewMode(false);
                                 form.resetFields();
                                 setIsModalVisible(true);
                             }}
@@ -287,10 +314,6 @@ export default function MembersPage() {
                             <div className="text-3xl font-black bg-linear-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                                 {filteredMembers.length.toLocaleString()}
                             </div>
-                            <div className="flex items-center text-xs text-green-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
-                                +{(filteredMembers.length * 0.12).toFixed(0)} this month
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,10 +328,6 @@ export default function MembersPage() {
                             <div className="text-3xl font-black bg-linear-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent">
                                 {filteredMembers.filter(m => m.status === 'active').length}
                             </div>
-                            <div className="flex items-center text-xs text-emerald-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1 animate-pulse"></span>
-                                78% attendance
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -322,10 +341,6 @@ export default function MembersPage() {
                             <div className="text-sm font-medium uppercase tracking-wide mb-1">Pending Payments</div>
                             <div className="text-3xl font-black bg-linear-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
                                 ₹{(filteredMembers.length * 1500).toLocaleString()}
-                            </div>
-                            <div className="flex items-center text-xs text-orange-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-orange-400 rounded-full mr-1 animate-pulse"></span>
-                                12 due this week
                             </div>
                         </div>
                     </div>
@@ -344,10 +359,6 @@ export default function MembersPage() {
                                     ? `₹${(filteredMembers.reduce((sum, m) => sum + (m.membership_type === 'Elite' ? 3000 : m.membership_type === 'Premium' ? 2000 : 1000), 0) / filteredMembers.length).toFixed(0)}`
                                     : '₹0'
                                 }
-                            </div>
-                            <div className="flex items-center text-xs text-purple-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full mr-1 animate-pulse"></span>
-                                Premium avg tier
                             </div>
                         </div>
                     </div>
@@ -371,7 +382,12 @@ export default function MembersPage() {
 
             {/* Add/Edit Member Modal */}
             <Modal
-                title={formType === 'add' ? 'Add New Member' : 'Edit Member'}
+                title={
+                    formType === 'add' ? 'Add New Member' :
+                        formType === 'view' ? 'Member Details' :
+                            'Edit Member'
+                }
+
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
@@ -383,57 +399,66 @@ export default function MembersPage() {
                     onFinish={handleFormSubmit}
                     initialValues={{ status: 'active', membership_type: 'Basic' }}
                 >
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="name" label="Full Name" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<UserOutlined />} placeholder="Enter full name" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="phone" label="Phone" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<PhoneOutlined />} placeholder="Enter phone number" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    <div className={viewMode ? 'pointer-events-none select-none opacity-75' : ''}>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="name" label="Full Name" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<UserOutlined />} placeholder="Enter full name" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="phone" label="Phone" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<PhoneOutlined />} placeholder="Enter phone number" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<MailOutlined />} placeholder="Enter email" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="join_date" label="Join Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <DatePicker format='DD-MM-YYYY' style={{ width: '100%' }} className="custom-date-picker" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<MailOutlined />} placeholder="Enter email" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="join_date" label="Join Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <DatePicker
+                                        format='DD-MM-YYYY'
+                                        style={{ width: '100%' }}
+                                        disabledDate={(current) => {
+                                            return current && current < dayjs().startOf('day');
+                                        }} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="membership_type" label="Membership Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select membership">
-                                    <Option value="Basic">Basic - ₹999/month</Option>
-                                    <Option value="Premium">Premium - ₹1999/month</Option>
-                                    <Option value="Elite">Elite - ₹2999/month</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select status">
-                                    <Option value="active">Active</Option>
-                                    <Option value="inactive">Inactive</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <div className="flex! justify-end space-x-3 pt-4">
-                        <Button type="primary" htmlType="submit" loading={loading} className="bg-linear-to-r! from-green-500! to-emerald-600!">
-                            {formType === 'add' ? 'Add Member' : 'Update Member'}
-                        </Button>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="membership_type" label="Membership Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select membership">
+                                        <Option value="Basic">Basic - ₹999/month</Option>
+                                        <Option value="Premium">Premium - ₹1999/month</Option>
+                                        <Option value="Elite">Elite - ₹2999/month</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select status">
+                                        <Option value="active">Active</Option>
+                                        <Option value="inactive">Inactive</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
                     </div>
+
+                    {!viewMode && (
+                        <div className="flex! justify-end space-x-3 pt-4">
+                            <Button type="primary" htmlType="submit" loading={loading} className="bg-linear-to-r! from-green-500! to-emerald-600!">
+                                {formType === 'add' ? 'Add Member' : 'Update Member'}
+                            </Button>
+                        </div>
+                    )}
                 </Form>
             </Modal>
         </div>

@@ -7,7 +7,8 @@ import {
 import {
     SearchOutlined, EditOutlined, DeleteOutlined, PlusOutlined,
     FileTextOutlined, UserOutlined, DollarCircleOutlined, CalendarOutlined,
-    CreditCardOutlined, ClockCircleOutlined, CheckCircleOutlined
+    CreditCardOutlined, ClockCircleOutlined, CheckCircleOutlined,
+    EyeOutlined
 } from '@ant-design/icons';
 import { MEMBERS, PAYMENTS } from '@/utilities/apiUrls';
 
@@ -26,6 +27,8 @@ export default function PaymentsPage() {
     const [editingPayment, setEditingPayment] = useState(null);
     const [form] = Form.useForm();
     const [formType, setFormType] = useState('add');
+
+    const [viewMode, setViewMode] = useState(false);
 
     // --------------------- THIS IS FOR MEMBER LIST DROPDOWN ------------------------- //
     const [membersList, setMembersList] = useState([]);
@@ -140,7 +143,7 @@ export default function PaymentsPage() {
 
     const paymentsColumns = [
         {
-            title: 'Payment Info',
+            title: 'Payment ID',
             key: 'info',
             render: (_, record) => (
                 <Space>
@@ -149,7 +152,7 @@ export default function PaymentsPage() {
                     </div>
                     <div>
                         <div className="font-semibold">#{record.payment_id}</div>
-                        <div className="text-sm">{record.member_name}</div>
+                        {/* <div className="text-sm">{record.member_name}</div> */}
                     </div>
                 </Space>
             ),
@@ -210,6 +213,13 @@ export default function PaymentsPage() {
             render: (_, record) => (
                 <Space size="middle">
                     <Button
+                        icon={<EyeOutlined />}
+                        onClick={() => viewPayment(record)}
+                        size="small"
+                        className="text-blue-400! border-blue-400!"
+                        title="View Details"
+                    />
+                    <Button
                         icon={<EditOutlined />}
                         onClick={() => editPayment(record)}
                         size="small"
@@ -229,6 +239,7 @@ export default function PaymentsPage() {
     const editPayment = (payment) => {
         setEditingPayment(payment);
         setFormType('edit');
+        setViewMode(false);
         setNextPaymentId(payment.payment_id);
 
         form.setFieldsValue({
@@ -244,6 +255,26 @@ export default function PaymentsPage() {
         });
         setIsModalVisible(true);
     };
+
+    const viewPayment = (payment) => {
+        setEditingPayment(payment);
+        setFormType('view');
+        setViewMode(true);
+        setNextPaymentId(payment.payment_id);
+        form.setFieldsValue({
+            member_id: payment.member_id,
+            member_name: payment.member_name,
+            payment_id: payment.payment_id,
+            amount: payment.amount,
+            membership_type: payment.membership_type,
+            method: payment.method,
+            status: payment.status,
+            payment_date: dayjs(payment.payment_date),
+            due_date: dayjs(payment.due_date)
+        });
+        setIsModalVisible(true);
+    };
+
 
     const handleFormSubmit = async (values) => {
         setLoading(true);
@@ -327,8 +358,8 @@ export default function PaymentsPage() {
                                 const newPaymentId = generatePaymentId();
                                 form.setFieldsValue({
                                     payment_id: newPaymentId,
-                                    payment_date: dayjs(),  // 🔥 Today
-                                    due_date: dayjs().add(30, 'day')  // 🔥 +30 days
+                                    payment_date: dayjs(),
+                                    due_date: dayjs().add(30, 'day')
                                 });
                                 setNextPaymentId(newPaymentId);
                                 setIsModalVisible(true);
@@ -353,10 +384,6 @@ export default function PaymentsPage() {
                             <div className="text-3xl font-black bg-linear-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
                                 {filteredPayments.filter(p => p.status === 'paid').length}
                             </div>
-                            <div className="flex items-center text-xs text-blue-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-blue-400 rounded-full mr-1 animate-pulse"></span>
-                                92% collection
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -377,10 +404,6 @@ export default function PaymentsPage() {
                                         maximumFractionDigits: 2
                                     })}
                             </div>
-                            <div className="flex items-center text-xs text-orange-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-orange-400 rounded-full mr-1 animate-pulse"></span>
-                                {filteredPayments.filter(p => p.status === 'pending').length} payments due
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -395,10 +418,6 @@ export default function PaymentsPage() {
                             <div className="text-gray-400 text-sm font-medium uppercase tracking-wide mb-1">UPI Payments</div>
                             <div className="text-3xl font-black bg-linear-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
                                 {filteredPayments.filter(p => p.method === 'UPI').length}
-                            </div>
-                            <div className="flex items-center text-xs text-purple-400 font-medium mt-1">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full mr-1 animate-pulse"></span>
-                                Most popular
                             </div>
                         </div>
                     </div>
@@ -421,105 +440,125 @@ export default function PaymentsPage() {
 
             {/* Add/Edit Payment Modal */}
             <Modal
-                title={formType === 'add' ? 'Add New Payment' : 'Edit Payment'}
+                title={
+                    formType === 'add' ? 'Add New Payment' :
+                        formType === 'view' ? 'Payment Details' :
+                            'Edit Payment'
+                }
+
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
                 width={700}
             >
                 <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-                    <Row gutter={24}>
-                        <Col span={24}>
-                            <Form.Item name="member_id" label="Select Member" rules={[{ required: true }]}>
-                                <Select
-                                    showSearch
-                                    placeholder="Search by member name..."
-                                    optionFilterProp="children"
-                                    onChange={handleMemberSelect}
-                                    filterOption={(input, option) =>
-                                        option.children.toLowerCase().includes(input.toLowerCase())
-                                    }
-                                >
-                                    {membersList.map(member => (
-                                        <Option key={member.id} value={member.member_id}>
-                                            {member.name}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
+                    <div className={viewMode ? 'pointer-events-none select-none opacity-75' : ''}>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <Form.Item name="member_id" label="Select Member" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select
+                                        showSearch
+                                        placeholder="Search by member name..."
+                                        optionFilterProp="children"
+                                        onChange={handleMemberSelect}
+                                        filterOption={(input, option) =>
+                                            option.children.toLowerCase().includes(input.toLowerCase())
+                                        }
+                                    >
+                                        {membersList.map(member => (
+                                            <Option key={member.id} value={member.member_id}>
+                                                {member.name}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
 
-                        </Col>
-                    </Row>
+                            </Col>
+                        </Row>
 
-                    <Form.Item name="member_name" style={{ display: 'none' }}>
-                        <Input />
-                    </Form.Item>
+                        <Form.Item name="member_name" style={{ display: 'none' }}>
+                            <Input />
+                        </Form.Item>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="payment_id" label="Payment ID" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input readOnly prefix={<FileTextOutlined />} placeholder="PAY001" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="amount" label="Amount" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input type="number" prefix="₹" placeholder="1500" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="payment_id" label="Payment ID" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input readOnly prefix={<FileTextOutlined />} placeholder="PAY001" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="amount" label="Amount" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input type="number" prefix="₹" placeholder="1500" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="membership_type" label="Membership Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select membership">
-                                    <Option value="Basic">Basic - ₹999/month</Option>
-                                    <Option value="Premium">Premium - ₹1999/month</Option>
-                                    <Option value="Elite">Elite - ₹2999/month</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="method" label="Payment Method" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select method">
-                                    <Option value="UPI">UPI</Option>
-                                    <Option value="Card">Card</Option>
-                                    <Option value="Cash">Cash</Option>
-                                    <Option value="Wallet">Wallet</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="membership_type" label="Membership Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select membership">
+                                        <Option value="Basic">Basic - ₹999/month</Option>
+                                        <Option value="Premium">Premium - ₹1999/month</Option>
+                                        <Option value="Elite">Elite - ₹2999/month</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="method" label="Payment Method" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select method">
+                                        <Option value="UPI">UPI</Option>
+                                        <Option value="Card">Card</Option>
+                                        <Option value="Cash">Cash</Option>
+                                        <Option value="Wallet">Wallet</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="payment_date" label="Payment Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <DatePicker style={{ width: '100%' }} format="DD-MM-YYYY" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="due_date" label="Due Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <DatePicker style={{ width: '100%' }} format="DD-MM-YYYY" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="payment_date" label="Payment Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <DatePicker
+                                        style={{ width: '100%' }}
+                                        format="DD-MM-YYYY"
+                                        disabledDate={(current) => {
+                                            return current && current < dayjs().startOf('day');
+                                        }} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="due_date" label="Due Date" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <DatePicker
+                                        style={{ width: '100%' }}
+                                        format="DD-MM-YYYY"
+                                        disabledDate={(current) => {
+                                            return current && current < dayjs().startOf('day');
+                                        }} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select status">
-                                    <Option value="paid">Paid</Option>
-                                    <Option value="pending">Pending</Option>
-                                    <Option value="failed">Failed</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>                    </Row>
-
-                    <div className="flex justify-end">
-                        <Button type="primary" htmlType="submit" loading={loading}
-                            className="bg-linear-to-r! from-emerald-500! to-green-600!">
-                            {formType === 'add' ? 'Add Payment' : 'Update Payment'}
-                        </Button>
+                        <Row gutter={24}>
+                            <Col span={24}>
+                                <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select status">
+                                        <Option value="paid">Paid</Option>
+                                        <Option value="pending">Pending</Option>
+                                        <Option value="failed">Failed</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
                     </div>
+
+                    {!viewMode && (
+                        <div className="flex justify-end">
+                            <Button type="primary" htmlType="submit" loading={loading}
+                                className="bg-linear-to-r! from-emerald-500! to-green-600!">
+                                {formType === 'add' ? 'Add Payment' : 'Update Payment'}
+                            </Button>
+                        </div>
+                    )}
                 </Form>
             </Modal>
         </div>

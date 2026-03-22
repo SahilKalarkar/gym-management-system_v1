@@ -6,7 +6,8 @@ import {
 } from 'antd';
 import {
     SearchOutlined, EditOutlined, DeleteOutlined, PlusOutlined,
-    ClockCircleOutlined, UserOutlined, EnvironmentOutlined, VideoCameraOutlined
+    ClockCircleOutlined, UserOutlined, EnvironmentOutlined, VideoCameraOutlined,
+    EyeOutlined
 } from '@ant-design/icons';
 import { CLASSES, TRAINERS } from '@/utilities/apiUrls';
 
@@ -25,6 +26,8 @@ export default function ClassesPage() {
     const [formType, setFormType] = useState('add');
 
     const [trainers, setTrainers] = useState([]);
+
+    const [viewMode, setViewMode] = useState(false);
 
 
     const fetchClasses = async () => {
@@ -95,7 +98,7 @@ export default function ClassesPage() {
 
     const classesColumns = [
         {
-            title: 'Class Info',
+            title: 'Class Name',
             key: 'info',
             render: (_, record) => (
                 <Space>
@@ -104,7 +107,7 @@ export default function ClassesPage() {
                     </div>
                     <div>
                         <div className="font-semibold">{record.title}</div>
-                        <div>{record.trainer_name || '--'}</div>
+                        {/* <div>{record.trainer_name || '--'}</div> */}
                     </div>
                 </Space>
             ),
@@ -125,7 +128,7 @@ export default function ClassesPage() {
             render: (_, record) => (
                 <div>
                     <div className="font-medium">{record.day}</div>
-                    <div className="text-sm">{record.start_time} - {record.end_time}</div>
+                    {/* <div className="text-sm">{record.start_time} - {record.end_time}</div> */}
                 </div>
             )
         },
@@ -161,6 +164,13 @@ export default function ClassesPage() {
             render: (_, record) => (
                 <Space size="middle">
                     <Button
+                        icon={<EyeOutlined />}
+                        onClick={() => viewClass(record)}
+                        size="small"
+                        className="text-blue-400! border-blue-400!"
+                        title="View Details"
+                    />
+                    <Button
                         icon={<EditOutlined />}
                         onClick={() => editClass(record)}
                         size="small"
@@ -180,6 +190,7 @@ export default function ClassesPage() {
     const editClass = (cls) => {
         setEditingClass(cls);
         setFormType('edit');
+        setViewMode(false);
         form.setFieldsValue({
             title: cls.title,
             trainer_id: cls.trainer_id,
@@ -195,6 +206,27 @@ export default function ClassesPage() {
         });
         setIsModalVisible(true);
     };
+
+    const viewClass = (cls) => {
+        setEditingClass(cls);
+        setFormType('view');
+        setViewMode(true);
+        form.setFieldsValue({
+            title: cls.title,
+            trainer_id: cls.trainer_id,
+            trainer_name: cls.trainer_name,
+            type: cls.type,
+            day: cls.day,
+            start_time: dayjs(cls.start_time, 'HH:mm'),
+            end_time: dayjs(cls.end_time, 'HH:mm'),
+            location: cls.location,
+            capacity: cls.capacity,
+            current_enrolled: cls.current_enrolled,
+            status: cls.status
+        });
+        setIsModalVisible(true);
+    };
+
 
     const handleFormSubmit = async (values) => {
         setLoading(true);
@@ -278,6 +310,7 @@ export default function ClassesPage() {
                             onClick={() => {
                                 setFormType('add');
                                 setEditingClass(null);
+                                setViewMode(false);
                                 form.resetFields();
                                 setIsModalVisible(true);
                             }}
@@ -299,10 +332,6 @@ export default function ClassesPage() {
                         <div className="flex-1">
                             <div className="text-sm font-medium">Total Classes</div>
                             <div className="text-3xl font-black">{filteredClasses.length}</div>
-                            <div className="flex items-center text-xs text-purple-400 font-medium">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full mr-1 animate-pulse"></span>
-                                5 new this week
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,10 +345,6 @@ export default function ClassesPage() {
                             <div className="text-sm font-medium">Today's Classes</div>
                             <div className="text-3xl font-black">
                                 {filteredClasses.filter(c => c.day === 'Monday').length}
-                            </div>
-                            <div className="flex items-center text-xs text-emerald-400 font-medium">
-                                <span className="w-2 h-2 bg-emerald-400 rounded-full mr-1 animate-pulse"></span>
-                                Running now
                             </div>
                         </div>
                     </div>
@@ -342,119 +367,128 @@ export default function ClassesPage() {
 
             {/* Add/Edit Class Modal */}
             <Modal
-                title={formType === 'add' ? 'Add New Class' : 'Edit Class'}
+                title={
+                    formType === 'add' ? 'Add New Class' :
+                        formType === 'view' ? 'Class Details' :
+                            'Edit Class'
+                }
+
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
                 width={700}
             >
                 <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="title" label="Class Title" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<VideoCameraOutlined />} placeholder="Class name" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="trainer_id" label="Select Trainer" rules={[{ required: true }]}>
-                                <Select
-                                    showSearch
-                                    placeholder="Choose trainer"
-                                    filterOption={(input, option) =>
-                                        option.children.toLowerCase().includes(input.toLowerCase())
-                                    }
-                                    onChange={(value, option) => {
-                                        form.setFieldsValue({
-                                            trainer_name: option.children
-                                        });
-                                    }}
-                                >
-                                    {trainers.map(trainer => (
-                                        <Option key={trainer.id} value={trainer.id}>
-                                            {trainer.name}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-                    <Form.Item name="trainer_name" style={{ display: 'none' }}>
-                        <Input />
-                    </Form.Item>
+                    <div className={viewMode ? 'pointer-events-none select-none opacity-75' : ''}>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="title" label="Class Title" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<VideoCameraOutlined />} placeholder="Class name" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="trainer_id" label="Select Trainer" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select
+                                        showSearch
+                                        placeholder="Choose trainer"
+                                        filterOption={(input, option) =>
+                                            option.children.toLowerCase().includes(input.toLowerCase())
+                                        }
+                                        onChange={(value, option) => {
+                                            form.setFieldsValue({
+                                                trainer_name: option.children
+                                            });
+                                        }}
+                                    >
+                                        {trainers.map(trainer => (
+                                            <Option key={trainer.id} value={trainer.id}>
+                                                {trainer.name}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Form.Item name="trainer_name" style={{ display: 'none' }}>
+                            <Input />
+                        </Form.Item>
 
-                    <Row gutter={24}>
-                        <Col span={8}>
-                            <Form.Item name="type" label="Class Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select type">
-                                    <Option value="Yoga">Yoga</Option>
-                                    <Option value="Cardio">Cardio</Option>
-                                    <Option value="Strength">Strength Training</Option>
-                                    <Option value="Zumba">Zumba</Option>
-                                    <Option value="HIIT">HIIT</Option>
-                                    <Option value="Pilates">Pilates</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="day" label="Day" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select day">
-                                    <Option value="Monday">Monday</Option>
-                                    <Option value="Tuesday">Tuesday</Option>
-                                    <Option value="Wednesday">Wednesday</Option>
-                                    <Option value="Thursday">Thursday</Option>
-                                    <Option value="Friday">Friday</Option>
-                                    <Option value="Saturday">Saturday</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="location" label="Location" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<EnvironmentOutlined />} placeholder="Studio A/B/C" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <Form.Item name="type" label="Class Type" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select type">
+                                        <Option value="Yoga">Yoga</Option>
+                                        <Option value="Cardio">Cardio</Option>
+                                        <Option value="Strength">Strength Training</Option>
+                                        <Option value="Zumba">Zumba</Option>
+                                        <Option value="HIIT">HIIT</Option>
+                                        <Option value="Pilates">Pilates</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="day" label="Day" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select day">
+                                        <Option value="Monday">Monday</Option>
+                                        <Option value="Tuesday">Tuesday</Option>
+                                        <Option value="Wednesday">Wednesday</Option>
+                                        <Option value="Thursday">Thursday</Option>
+                                        <Option value="Friday">Friday</Option>
+                                        <Option value="Saturday">Saturday</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="location" label="Location" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<EnvironmentOutlined />} placeholder="Studio A/B/C" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={8}>
-                            <Form.Item name="start_time" label="Start Time" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <TimePicker style={{ width: '100%' }} format="HH:mm" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="end_time" label="End Time" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <TimePicker style={{ width: '100%' }} format="HH:mm" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item name="capacity" label="Capacity" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input type="number" placeholder="Max students" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={8}>
+                                <Form.Item name="start_time" label="Start Time" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <TimePicker style={{ width: '100%' }} format="HH:mm" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="end_time" label="End Time" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <TimePicker style={{ width: '100%' }} format="HH:mm" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={8}>
+                                <Form.Item name="capacity" label="Capacity" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input type="number" placeholder="Max students" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="current_enrolled" label="Current Enrolled" style={{ marginBottom: 5 }}>
-                                <Input type="number" placeholder="0" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select status">
-                                    <Option value="active">Active</Option>
-                                    <Option value="full">Full</Option>
-                                    <Option value="inactive">Inactive</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <Button type="primary" htmlType="submit" loading={loading}
-                            className="bg-linear-to-r! from-purple-500! to-pink-600!">
-                            {formType === 'add' ? 'Add Class' : 'Update Class'}
-                        </Button>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="current_enrolled" label="Current Enrolled" style={{ marginBottom: 5 }}>
+                                    <Input type="number" placeholder="0" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select status">
+                                        <Option value="active">Active</Option>
+                                        <Option value="full">Full</Option>
+                                        <Option value="inactive">Inactive</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
                     </div>
+
+                    {!viewMode && (
+                        <div className="flex justify-end space-x-3 pt-4">
+                            <Button type="primary" htmlType="submit" loading={loading}
+                                className="bg-linear-to-r! from-purple-500! to-pink-600!">
+                                {formType === 'add' ? 'Add Class' : 'Update Class'}
+                            </Button>
+                        </div>
+                    )}
                 </Form>
             </Modal>
         </div>

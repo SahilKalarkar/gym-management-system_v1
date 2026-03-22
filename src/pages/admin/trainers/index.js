@@ -6,7 +6,8 @@ import {
 } from 'antd';
 import {
     SearchOutlined, EditOutlined, DeleteOutlined, PlusOutlined,
-    UserOutlined, PhoneOutlined, MailOutlined, CameraOutlined, CheckCircleOutlined
+    UserOutlined, PhoneOutlined, MailOutlined, CameraOutlined, CheckCircleOutlined,
+    EyeOutlined
 } from '@ant-design/icons';
 import { TRAINERS } from '@/utilities/apiUrls';
 
@@ -23,6 +24,8 @@ export default function TrainersPage() {
     const [editingTrainer, setEditingTrainer] = useState(null);
     const [form] = Form.useForm();
     const [formType, setFormType] = useState('add');
+
+    const [viewMode, setViewMode] = useState(false);
 
     const fetchTrainers = async () => {
         setLoading(true);
@@ -82,7 +85,7 @@ export default function TrainersPage() {
 
     const trainersColumns = [
         {
-            title: 'Trainer Info',
+            title: 'Trainer Name',
             key: 'info',
             render: (_, record) => {
                 const initials = record.name
@@ -112,7 +115,7 @@ export default function TrainersPage() {
                         </div>
                         <div>
                             <div className="font-semibold text-gray-900">{record.name}</div>
-                            <div className="text-sm text-orange-600 font-medium">{record.specialty}</div>
+                            {/* <div className="text-sm text-orange-600 font-medium">{record.specialty}</div> */}
                         </div>
                     </Space>
                 );
@@ -128,12 +131,6 @@ export default function TrainersPage() {
                         <PhoneOutlined className="text-orange-500 mr-1" />
                         {record.phone}
                     </div>
-                    {record.email && (
-                        <div className="flex items-center text-sm text-gray-600">
-                            <MailOutlined className="text-orange-500 mr-1" />
-                            {record.email}
-                        </div>
-                    )}
                 </div>
             ),
             width: 220
@@ -155,6 +152,13 @@ export default function TrainersPage() {
             render: (_, record) => (
                 <Space size="middle">
                     <Button
+                        icon={<EyeOutlined />}
+                        onClick={() => viewTrainer(record)}
+                        size="small"
+                        className="text-blue-400! border-blue-400!"
+                        title="View Details"
+                    />
+                    <Button
                         icon={<EditOutlined />}
                         onClick={() => editTrainer(record)}
                         size="small"
@@ -174,9 +178,19 @@ export default function TrainersPage() {
     const editTrainer = (trainer) => {
         setEditingTrainer(trainer);
         setFormType('edit');
+        setViewMode(false);
         form.setFieldsValue(trainer);
         setIsModalVisible(true);
     };
+
+    const viewTrainer = (trainer) => {
+        setEditingTrainer(trainer);
+        setFormType('view');
+        setViewMode(true);
+        form.setFieldsValue(trainer);
+        setIsModalVisible(true);
+    };
+
 
     const handleFormSubmit = async (values) => {
         setLoading(true);
@@ -252,6 +266,7 @@ export default function TrainersPage() {
                             onClick={() => {
                                 setFormType('add');
                                 setEditingTrainer(null);
+                                setViewMode(false);
                                 form.resetFields();
                                 setIsModalVisible(true);
                             }}
@@ -273,10 +288,6 @@ export default function TrainersPage() {
                         <div className="flex-1">
                             <div className="text-sm font-medium text-gray-600">Total Trainers</div>
                             <div className="text-4xl font-black text-gray-900">{filteredTrainers.length}</div>
-                            <div className="flex items-center text-xs text-orange-500 font-medium">
-                                <span className="w-2 h-2 bg-orange-500 rounded-full mr-1 animate-pulse"></span>
-                                {filteredTrainers.filter(t => t.status === 'active').length} active
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -291,10 +302,6 @@ export default function TrainersPage() {
                             <div className="text-4xl font-black text-emerald-600">
                                 {filteredTrainers.filter(t => t.status === 'active').length}
                             </div>
-                            <div className="flex items-center text-xs text-emerald-500 font-medium">
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1 animate-pulse"></span>
-                                Ready to train
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -308,10 +315,6 @@ export default function TrainersPage() {
                             <div className="text-sm font-medium text-gray-600">Contact Info</div>
                             <div className="text-4xl font-black text-gray-900">
                                 {filteredTrainers.filter(t => t.phone).length}
-                            </div>
-                            <div className="flex items-center text-xs text-gray-500 font-medium">
-                                <span className="w-2 h-2 bg-gray-500 rounded-full mr-1 animate-pulse"></span>
-                                With phone numbers
                             </div>
                         </div>
                     </div>
@@ -334,64 +337,70 @@ export default function TrainersPage() {
 
             {/* Add/Edit Trainer Modal */}
             <Modal
-                title={formType === 'add' ? 'Add New Trainer' : 'Edit Trainer'}
+                title={
+                    formType === 'add' ? 'Add New Trainer' :
+                        formType === 'view' ? 'Trainer Details' :
+                            'Edit Trainer'
+                }
                 open={isModalVisible}
                 onCancel={() => setIsModalVisible(false)}
                 footer={null}
                 width={700}
             >
                 <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="name" label="Full Name" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<UserOutlined />} placeholder="Enter full name" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="specialty" label="Specialty" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<CameraOutlined />} placeholder="Yoga, HIIT, CrossFit etc." />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    <div className={viewMode ? 'pointer-events-none select-none opacity-75' : ''}>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="name" label="Full Name" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<UserOutlined />} placeholder="Enter full name" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="specialty" label="Specialty" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<CameraOutlined />} placeholder="Yoga, HIIT, CrossFit etc." />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="phone" label="Phone" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Input prefix={<PhoneOutlined />} placeholder="9876543210" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="email" label="Email" style={{ marginBottom: 5 }}>
-                                <Input prefix={<MailOutlined />} placeholder="trainer@example.com" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Form.Item name="phone" label="Phone" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Input prefix={<PhoneOutlined />} placeholder="9876543210" />
+                                </Form.Item>
+                            </Col>
+                            <Col span={12}>
+                                <Form.Item name="email" label="Email" style={{ marginBottom: 5 }}>
+                                    <Input prefix={<MailOutlined />} placeholder="trainer@example.com" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
 
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Form.Item name="image" label="Profile Image" style={{ marginBottom: 5 }}>
-                                <Input placeholder="/images/trainer1.png" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
-                                <Select placeholder="Select status">
-                                    <Option value="active">Active</Option>
-                                    <Option value="inactive">Inactive</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                    </Row>
-
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
-                        <Button type="primary" htmlType="submit" loading={loading}
-                            className="bg-linear-to-r! from-orange-500! to-red-600! hover:from-orange-600! hover:to-red-700!"
-                        >
-                            {formType === 'add' ? 'Add Trainer' : 'Update Trainer'}
-                        </Button>
+                        <Row gutter={24}>
+                            {/* <Col span={12}>
+                                <Form.Item name="image" label="Profile Image" style={{ marginBottom: 5 }} hi>
+                                    <Input placeholder="/images/trainer1.png" />
+                                </Form.Item>
+                            </Col> */}
+                            <Col span={24}>
+                                <Form.Item name="status" label="Status" rules={[{ required: true }]} style={{ marginBottom: 5 }}>
+                                    <Select placeholder="Select status">
+                                        <Option value="active">Active</Option>
+                                        <Option value="inactive">Inactive</Option>
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
                     </div>
-                </Form>
+
+                    {!viewMode && (
+                        <div className="flex justify-end space-x-3 pt-4">
+                            <Button type="primary" htmlType="submit" loading={loading}
+                                className="bg-linear-to-r! from-orange-500! to-red-600! hover:from-orange-600! hover:to-red-700!"
+                            >
+                                {formType === 'add' ? 'Add Trainer' : 'Update Trainer'}
+                            </Button>
+                        </div>
+                    )} </Form>
             </Modal>
         </div>
     );

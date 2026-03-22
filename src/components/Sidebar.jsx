@@ -6,7 +6,8 @@ import Link from 'next/link';
 import {
   BarChartOutlined, TeamOutlined, FileTextOutlined, DollarCircleOutlined,
   SettingOutlined,
-  UserOutlined
+  UserOutlined,
+  PullRequestOutlined
 } from '@ant-design/icons';
 
 
@@ -20,6 +21,7 @@ export default function Sidebar({ collapsed, onCollapse }) {
 
   const menuItems = [
     { key: 'dashboard', icon: <BarChartOutlined />, label: <Link href="/admin/dashboard">Dashboard</Link> },
+    { key: 'equipments', icon: <PullRequestOutlined />, label: <Link href="/admin/equipments">Equipments</Link> },
     { key: 'trainers', icon: <UserOutlined />, label: <Link href="/admin/trainers">Trainers</Link> },
     { key: 'members', icon: <TeamOutlined />, label: <Link href="/admin/members">Members</Link> },
     { key: 'classes', icon: <FileTextOutlined />, label: <Link href="/admin/classes">Classes</Link> },

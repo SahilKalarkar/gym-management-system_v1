@@ -14,6 +14,7 @@ export default function App({ Component, pageProps }) {
     '/admin/members',
     '/admin/classes',
     '/admin/payments',
+    '/admin/equipments',
     '/admin/trainers',
     '/admin/settings'
   ];
