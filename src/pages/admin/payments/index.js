@@ -94,7 +94,7 @@ export default function PaymentsPage() {
             const isOverdue = dayjs().isAfter(dayjs(payment.due_date));
 
             return (
-                payment.id?.toLowerCase().includes(searchLower) ||
+                // payment.id?.toLowerCase().includes(searchLower) ||
                 payment.payment_id.toLowerCase().includes(searchLower) ||
                 payment.member_name.toLowerCase().includes(searchLower) ||
                 payment.member_id?.toLowerCase().includes(searchLower) ||
@@ -287,13 +287,8 @@ export default function PaymentsPage() {
 
     const deletePayment = async (id) => {
         try {
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('id', id);
-
-            const res = await fetch(`${PAYMENTS}`, {
+            const res = await fetch(`${PAYMENTS}?action=delete&id=${id}`, {
                 method: 'POST',
-                body: formData
             });
 
             const data = await res.json();

@@ -216,14 +216,8 @@ export default function TrainersPage() {
 
     const deleteTrainer = async (id) => {
         try {
-            // 🔥 FormData DELETE (safer than GET delete)
-            const formData = new FormData();
-            formData.append('id', id);
-            formData.append('action', 'delete');
-
-            const res = await fetch(TRAINERS, {
+            const res = await fetch(`${TRAINERS}?action=delete&id=${id}`, {
                 method: 'POST',
-                body: formData
             });
 
             const data = await res.json();

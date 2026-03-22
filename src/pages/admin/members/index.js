@@ -225,14 +225,9 @@ export default function MembersPage() {
 
     const deleteMember = async (id) => {
         try {
-            // 🔥 FormData POST delete (same as trainers!)
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('id', id);
 
-            const res = await fetch(`${MEMBERS}`, {
+            const res = await fetch(`${MEMBERS}?action=delete&id=${id}`, {
                 method: 'POST',
-                body: formData
             });
 
             const data = await res.json();

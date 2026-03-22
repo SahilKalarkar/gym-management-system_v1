@@ -45,7 +45,7 @@ export default function AdminLogin() {
         } catch (error) {
             message.error('Network error. Please try again.');
         } finally {
-            setLoading(true);
+            setLoading(false);
         }
     };
 

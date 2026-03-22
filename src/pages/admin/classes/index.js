@@ -241,14 +241,8 @@ export default function ClassesPage() {
 
     const deleteClass = async (id) => {
         try {
-            // 🔥 FormData POST delete (same pattern!)
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('id', id);
-
-            const res = await fetch(`${CLASSES}`, {
+            const res = await fetch(`${CLASSES}?action=delete&id=${id}`, {
                 method: 'POST',
-                body: formData
             });
 
             const data = await res.json();

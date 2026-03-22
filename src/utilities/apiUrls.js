@@ -1,9 +1,13 @@
-// export const GLOBAL_PATH = 'http://localhost/gym_backend/api'
+// export const GLOBAL_PATH = 'http://localhost:3001/gym_backend/api'
+
+
+export const GLOBAL_PATH = 'https://gym-backend-node-v1-2.onrender.com/gym_backend/api';
+
 
 // export const GLOBAL_PATH = 'https://powerforgesm.ct.ws/gym_backend/api';
 
 
-export const GLOBAL_PATH = 'https://gymapi.unaux.com/gym_backend/api';
+// export const GLOBAL_PATH = 'https://gymapi.unaux.com/gym_backend/api';
 
 export const LOGIN = `${GLOBAL_PATH}/auth.php`
 
